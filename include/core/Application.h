@@ -2,8 +2,13 @@
 #include <SDL.h>
 #include <glad/glad.h>
 #include <string>
+#include <memory>
+
 #include "core/Timer.h"
-#include "core/Logger.h"
+
+// 前向声明
+class InputMap;
+class Logger;
 
 /// @brief 应用程序类 - 管理整个游戏生命周期
 /// @details 该类负责初始化SDL和OpenGL环境，处理事件循环，并在应用程序退出时清理资源。
@@ -68,6 +73,8 @@ private:
 	int m_screenHeight;	// 窗口高度
 	bool m_bIsRunning;	// 应用程序是否正在运行标志
 
+	std::unique_ptr<InputMap> m_pInputMap;	// 输入映射
+	
 	Timer m_frameTimer;	// 帧率计时器
 	Logger* m_pLogger;	// 日志记录器
 };

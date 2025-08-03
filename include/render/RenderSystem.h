@@ -1,6 +1,7 @@
 #pragma once
 #include "ecs/System.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -37,13 +38,9 @@ public:
 	void update(World& world, float deltaTime) override;
 	
 private:
-	/// @brief 创建测试网格（临时）
-	/// @details 该方法用于创建一个简单的测试网格，便于验证渲染系统是否正常工作。
-	void createTestMesh();
 
 private:
 	Shader* m_pCoreShader;	// 渲染使用的着色器程序
-	Mesh* m_pTestCube;		// 渲染使用的网格数据(临时)
 
 	glm::mat4 m_viewMatrix;		// 视图矩阵
 	glm::mat4 m_projectionMatrix;	// 投影矩阵

@@ -1,6 +1,13 @@
 #include "core/Application.h"
+#include "core/InputMap.h"
+#include "core/Logger.h"
 #include "ecs/World.h"
+#include "systems/PlayerControlSystem.h"
+#include "systems/AbilitySystem.h"
+#include "systems/CorruptionSystem.h"
+#include "systems/MovementSystem.h"
 #include "render/RenderSystem.h"
+#include "prefabs/PlayerPrefab.h"
 
 Application::Application(const std::string title, int width, int height)
 	: m_pWindow(nullptr),
@@ -71,6 +78,12 @@ bool Application::initialize()
 	// 初始化OpenGL状态
 	initOpenGLState();
 
+	m_pInputMap = std::make_unique<InputMap>(); // 创建输入映射实例
+	m_pInputMap.get()->addActionListener(InputMap::ExitGame, [this]() {
+		m_bIsRunning = false; // 按下ESC键退出
+		m_pLogger->log("按下ESC键，退出游戏");
+		}, InputMap::Pressed);
+
 	m_pLogger->log("应用程序初始化完成");
 	return true;
 }
@@ -98,6 +111,13 @@ void Application::run()
 
 	m_pLogger->log("开始游戏主循环");
 
+	// 创建玩家实体并添加到ECS世界
+	Prefab::createPlayer(world);
+
+	world.addSystem(std::make_unique<MovementSystem>()); // 添加移动系统到ECS世界
+	world.addSystem(std::make_unique<PlayerControlSystem>(m_pInputMap.get())); // 添加玩家控制系统到ECS世界
+	world.addSystem(std::make_unique<AbilitySystem>()); // 添加能力系统到ECS世界
+	world.addSystem(std::make_unique<CorruptionSystem>()); // 添加腐化系统到ECS世界
 	world.addSystem(std::make_unique<RenderSystem>()); // 添加渲染系统到ECS世界
 
 	m_frameTimer.start(); // 启动帧计时器
@@ -145,12 +165,9 @@ void Application::processEvents()
 					std::to_string(m_screenHeight));
 			}
 			break;
-
+		case SDL_KEYUP:
 		case SDL_KEYDOWN:
-			if (event.key.keysym.sym == SDLK_ESCAPE) {
-				m_bIsRunning = false;
-				m_pLogger->log("ESC键按下，退出游戏");
-			}
+			m_pInputMap.get()->processEvent(event); // 处理输入事件
 			break;
 		}
 	}

@@ -3,14 +3,13 @@
 #include "ecs/Entity.h"
 #include "render/Shader.h"
 #include "render/Mesh.h"
+#include "components/MeshRenderer.h"
+#include "components/Transform.h"
 #include "core/Logger.h"
 
 RenderSystem::RenderSystem() {
     // 加载核心着色器
     m_pCoreShader = new Shader("resources/shaders/core.vert", "resources/shaders/core.frag");
-
-    // 创建测试网格
-    createTestMesh();
 
     // 设置相机位置
     m_viewMatrix = glm::lookAt(
@@ -36,10 +35,6 @@ RenderSystem::~RenderSystem()
         delete m_pCoreShader;
         m_pCoreShader = nullptr;
     }
-    if(m_pTestCube) {
-        delete m_pTestCube;
-        m_pTestCube = nullptr;
-	}
     Logger::instance()->log("渲染系统已销毁");
 }
 
@@ -57,46 +52,22 @@ void RenderSystem::update(World& world, float deltaTime)
     totalTime += deltaTime;
     m_pCoreShader->setFloat("time", totalTime);
 
-    // 渲染测试立方体
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::rotate(model, totalTime, glm::vec3(0.5f, 1.0f, 0.0f));
-    m_pCoreShader->setMat4("model", model);
-    m_pTestCube->draw();
-}
+    // 渲染所有实体
+    for (auto& entity : world.getEntities()) {
+        auto* renderer = entity->getComponent<MeshRenderer>();
+        auto* transform = entity->getComponent<Transform>();
 
-void RenderSystem::createTestMesh() {
-    // 立方体顶点数据
-    std::vector<Mesh::Vertex> vertices = {
-        // 前面
-        {{-0.5f, -0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, -0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {1.0f, 1.0f, 0.0f}},
+        if (renderer && renderer->mesh && transform) {
+            // 设置模型矩阵
+            glm::mat4 model = transform->getModelMatrix();
+            m_pCoreShader->setMat4("model", model);
 
-        // 后面
-        {{-0.5f, -0.5f, -0.5f}, {0.0f, 0.0f, -1.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 1.0f}},
-        {{0.5f, -0.5f, -0.5f}, {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f}, {0.0f, 1.0f, 1.0f}},
-        {{0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, -1.0f}, {0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}},
-        {{-0.5f, 0.5f, -0.5f}, {0.0f, 0.0f, -1.0f}, {1.0f, 1.0f}, {0.5f, 0.5f, 0.5f}},
-    };
+            // 设置颜色
+            m_pCoreShader->setVec3("color", renderer->color);
 
-    // 立方体索引数据
-    std::vector<unsigned int> indices = {
-        // 前面
-        0, 1, 2, 2, 3, 0,
-        // 右面
-        1, 5, 6, 6, 2, 1,
-        // 后面
-        5, 4, 7, 7, 6, 5,
-        // 左面
-        4, 0, 3, 3, 7, 4,
-        // 上面
-        3, 2, 6, 6, 7, 3,
-        // 下面
-        4, 5, 1, 1, 0, 4
-    };
+            // 绘制网格
+            renderer->mesh->draw();
+        }
+    }
 
-    // 创建网格
-    m_pTestCube = new Mesh(vertices, indices);
-    Logger::instance()->log("测试立方体创建成功");
 }

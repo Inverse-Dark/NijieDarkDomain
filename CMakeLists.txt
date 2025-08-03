@@ -25,6 +25,11 @@ add_executable(${PROJECT_NAME}
     "src/render/Shader.cpp" 
     "src/render/Mesh.cpp" 
     "src/render/RenderSystem.cpp"
+    "src/systems/PlayerControlSystem.cpp"
+    "src/systems/AbilitySystem.cpp"
+    "src/systems/CorruptionSystem.cpp"
+    "src/systems/MovementSystem.cpp" 
+    "src/core/InputMap.cpp" 
 )
 
 # 包含目录
