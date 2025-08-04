@@ -25,7 +25,7 @@ public:
 	/// @details 创建一个新的实体并将其添加到世界中。实体的ID是唯一的，自动递增。
 	/// @return 返回新创建的实体的引用
 	Entity& createEntity() {
-		m_entities.emplace_back(std::make_unique<Entity>(m_nextEntityId++));
+		m_entities.emplace_back(std::make_unique<Entity>(m_nextEntityId++, this));
 		return *m_entities.back();
 	}
 	/// @brief 添加一个系统到世界中
@@ -50,8 +50,33 @@ public:
 		return m_entities;
 	}
 
+	/// @brief 标记一个需要销毁的实体
+	/// @details 销毁一个实体，并从世界中移除它。实体必须是有效的。
+	/// @param entity [IN] 要销毁的实体
+	void markEntityForDestruction(Entity& entity)
+	{
+		m_entitiesToDestroy.push_back(entity.getId());
+	}
+
+	/// @brief 处理需要销毁的实体
+	/// @details 根据待销毁实体队列，进行循环销毁。
+	void World::processDestruction()
+	{
+		for (int id : m_entitiesToDestroy)
+		{
+			auto it = std::remove_if(m_entities.begin(), m_entities.end(),
+				[id](const std::unique_ptr<Entity>& e) { return e->getId() == id; });
+
+			if (it != m_entities.end())
+			{
+				m_entities.erase(it, m_entities.end());
+			}
+		}
+		m_entitiesToDestroy.clear();
+	}
 private:
 	std::vector<std::unique_ptr<Entity>> m_entities;    // 存储所有实体的向量
 	std::vector<std::unique_ptr<System>> m_systems; // 存储所有系统的向量
+	std::vector<int> m_entitiesToDestroy; // 待销毁实体ID列表
 	int m_nextEntityId;	// 下一个实体的ID，用于确保实体ID的唯一性
 };

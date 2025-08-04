@@ -1,5 +1,4 @@
 #include "systems/PlayerControlSystem.h"
-#include "core/InputMap.h"
 #include "ecs/World.h"
 #include "ecs/Entity.h"
 #include "components/Player.h"
@@ -9,65 +8,67 @@
 #include "components/MovementProperties.h"
 
 PlayerControlSystem::PlayerControlSystem(InputMap* inputMap)
-	: m_pInputMap(inputMap),
-	m_pPlayerEntity(nullptr)
+	: m_pInputMap(inputMap)
 {
-	m_pInputMap->addActionListener(InputMap::Ability1, [this]() {
-		requestAbility(AbilityType::Perception);
-		}, InputMap::Pressed);
-
-	inputMap->addActionListener(InputMap::Ability2, [this]() {
-		requestAbility(AbilityType::Manipulation);
-		}, InputMap::Pressed);
-
-	inputMap->addActionListener(InputMap::Ability3, [this]() {
-		requestAbility(AbilityType::Distortion);
-		}, InputMap::Pressed);
-
-	inputMap->addActionListener(InputMap::Ability4, [this]() {
-		requestAbility(AbilityType::Assimilation);
-		}, InputMap::Pressed);
-
-	inputMap->addActionListener(InputMap::Ability5, [this]() {
-		requestAbility(AbilityType::Purification);
-		}, InputMap::Pressed);
 }
 
 void PlayerControlSystem::update(World& world, float deltaTime)
 {
-	if (!m_pPlayerEntity)
+	Entity* pPlayer = nullptr;
+	for (auto& entity : world.getEntities())
 	{
-		for (auto& entity : world.getEntities()) {
-			if (entity->getComponent<Player>()) {
-				m_pPlayerEntity = entity.get();
-			}
+		if (entity->getComponent<Player>())
+		{
+			pPlayer = entity.get();
 		}
 	}
 
-	m_pInputMap->update();
+	if (!pPlayer || !m_pInputMap) return;
 
-	handleMovement(deltaTime);
+	checkAbility(pPlayer, InputMap::Ability1, AbilityType::Perception);
+	checkAbility(pPlayer, InputMap::Ability2, AbilityType::Manipulation);
+	checkAbility(pPlayer, InputMap::Ability3, AbilityType::Distortion);
+	checkAbility(pPlayer, InputMap::Ability4, AbilityType::Assimilation);
+	checkAbility(pPlayer, InputMap::Ability5, AbilityType::Purification);
+
+	handleMovement(pPlayer, deltaTime);
 }
 
-void PlayerControlSystem::requestAbility(AbilityType type)
+void PlayerControlSystem::checkAbility(Entity* player, InputMap::Action action, AbilityType abilityType)
 {
-	if (m_pPlayerEntity) {
-		auto* abilityInput = m_pPlayerEntity->getComponent<AbilityInput>();
-		if (abilityInput) {
-			abilityInput->requestAbility(type);
+	if (!player) return; // 确保玩家实体已设置
+
+	// 获取技能请求组件
+	auto* abilityInput = player->getComponent<AbilityInput>();
+	if (!abilityInput) return;
+
+	if (m_pInputMap->isActionHeld(action))
+	{
+		// 如果技能尚未触发
+		if (!abilityInput->isAbilityTriggered(abilityType))
+		{
+			abilityInput->requestAbility(abilityType);
+			abilityInput->setAbilityTriggered(abilityType, true);
 		}
 	}
+	else
+	{
+		// 按键释放时重置状态
+		abilityInput->setAbilityTriggered(abilityType, false);
+	}
+
+
 }
 
-void PlayerControlSystem::handleMovement(float deltaTime)
+void PlayerControlSystem::handleMovement(Entity* player, float deltaTime)
 {
-	if (!m_pPlayerEntity) return; // 确保玩家实体已设置
+	if (!player) return; // 确保玩家实体已设置
 
-	auto* transform = m_pPlayerEntity->getComponent<Transform>();
-	auto* velocity = m_pPlayerEntity->getComponent<Velocity>();
-	auto* movementProps = m_pPlayerEntity->getComponent<MovementProperties>();
+	auto* transform = player->getComponent<Transform>();
+	auto* velocity = player->getComponent<Velocity>();
+	auto* movementProps = player->getComponent<MovementProperties>();
 
-	if (!transform || !velocity) return;
+	if (!transform || !velocity || !movementProps) return;
 
 	// 计算移动方向
 	glm::vec3 moveDirection(0.0f);
@@ -85,7 +86,7 @@ void PlayerControlSystem::handleMovement(float deltaTime)
 	// 标准化方向并应用速度
 	if (glm::length(moveDirection) > 0.0f) {
 		moveDirection = glm::normalize(moveDirection);
-		velocity->linear = moveDirection * movementProps->getEffectiveSpeed() * deltaTime;
+		velocity->linear = moveDirection * movementProps->getEffectiveSpeed();
 	}
 	else {
 		velocity->linear = glm::vec3(0.0f);

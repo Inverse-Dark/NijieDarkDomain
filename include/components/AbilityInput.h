@@ -3,6 +3,7 @@
 #include "core/AbilityTypes.h"
 
 #include <vector>
+#include <unordered_map>
 
 /// @brief 能力输入组件 - 存储玩家的能力激活请求
 /// @details 该组件用于记录玩家希望激活的能力。可以通过系统处理这些输入来触发相应的能力效果。
@@ -18,6 +19,7 @@
 struct AbilityInput : public Component
 {
 	std::vector<AbilityType> requestedAbilities; /// 存储玩家希望激活的能力类型列表
+	std::unordered_map<AbilityType, bool> abilityTriggered; /// 存储玩家希望激活的能力类型列表
 
 	/// @brief 添加一个能力请求到输入列表
 	/// @details 将指定的能力类型添加到请求列表中，以便后续处理
@@ -32,5 +34,24 @@ struct AbilityInput : public Component
 	void clear()
 	{
 		requestedAbilities.clear();
+	}
+
+	/// @brief 设置能力点击状态
+	/// @details 用来修改能力是否请求过。
+	/// @param type [IN] 能力类型
+	/// @param triggered [IN] 是否请求过
+	void setAbilityTriggered(AbilityType type, bool triggered)
+	{
+		abilityTriggered[type] = triggered;
+	}
+
+	/// @brief 获取能力是否请求过
+	/// @details 用来判断能力请求是不是同一个按键触发的，避免一次按键触发多次。
+	/// @param type [IN] 能力类型
+	/// @return true：触发过了	false：未触发
+	bool isAbilityTriggered(AbilityType type) const
+	{
+		auto it = abilityTriggered.find(type);
+		return (it != abilityTriggered.end()) ? it->second : false;
 	}
 };

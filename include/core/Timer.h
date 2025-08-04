@@ -28,6 +28,11 @@ public:
 	/// @return 返回从上次开始到现在的时间间隔
 	float restart();
 
+	/// @brief 更新计时器
+	/// @details 该函数会计算从上次更新到现在的时间间隔，并更新计时器状态
+	/// @param deltaTime [IN] 上次更新到现在的时间间隔
+	void update(float deltaTime);
+
 	/// @brief 获取经过的时间
 	/// @return 返回从计时器开始到现在的时间间隔
 	float elapsed() const;

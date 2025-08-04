@@ -11,7 +11,7 @@ void MovementSystem::update(World& world, float deltaTime) {
 
 		if (transform && velocity) {
 			// 更新位置
-			transform->position += velocity->linear;
+			transform->position += velocity->linear * deltaTime;
 
 			// 更新旋转（四元数旋转）
 			if (glm::length(velocity->angular) > 0.0f) {

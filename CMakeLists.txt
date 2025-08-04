@@ -9,6 +9,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin) # VS兼容
 # 其他设置
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8")
 set(CMAKE_TOOLCHAIN_FILE "D:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake")
 
 # 依赖查找
@@ -30,6 +31,9 @@ add_executable(${PROJECT_NAME}
     "src/systems/CorruptionSystem.cpp"
     "src/systems/MovementSystem.cpp" 
     "src/core/InputMap.cpp" 
+    "src/systems/EnvironmentSystem.cpp" 
+    "src/systems/AISystem.cpp" 
+    "src/systems/CombatSystem.cpp"
 )
 
 # 包含目录

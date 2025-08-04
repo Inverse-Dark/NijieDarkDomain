@@ -6,8 +6,12 @@
 #include "systems/AbilitySystem.h"
 #include "systems/CorruptionSystem.h"
 #include "systems/MovementSystem.h"
+#include "systems/EnvironmentSystem.h"
+#include "systems/AISystem.h"
+#include "systems/CombatSystem.h"
 #include "render/RenderSystem.h"
 #include "prefabs/PlayerPrefab.h"
+#include "prefabs/EnemyPrefab.h"
 
 Application::Application(const std::string title, int width, int height)
 	: m_pWindow(nullptr),
@@ -114,11 +118,23 @@ void Application::run()
 	// 创建玩家实体并添加到ECS世界
 	Prefab::createPlayer(world);
 
+	// 创建初始环境
+	auto& envSystem = std::make_unique<EnvironmentSystem>();
+	envSystem->spawnCorruptionSource(world, glm::vec3(10.0f, 0.0f, 10.0f), 15.0f, 8.0f);
+	envSystem->spawnCorruptionSource(world, glm::vec3(-10.0f, 0.0f, -10.0f), 12.0f, 6.0f);
+
 	world.addSystem(std::make_unique<MovementSystem>()); // 添加移动系统到ECS世界
 	world.addSystem(std::make_unique<PlayerControlSystem>(m_pInputMap.get())); // 添加玩家控制系统到ECS世界
 	world.addSystem(std::make_unique<AbilitySystem>()); // 添加能力系统到ECS世界
 	world.addSystem(std::make_unique<CorruptionSystem>()); // 添加腐化系统到ECS世界
+	world.addSystem(std::make_unique<CombatSystem>()); // 添加战斗系统到ECS世界
+	world.addSystem(std::make_unique<AISystem>()); // 添加AI系统到ECS世界
+	world.addSystem(std::move(envSystem)); // 添加环境系统到ECS世界
 	world.addSystem(std::make_unique<RenderSystem>()); // 添加渲染系统到ECS世界
+
+	// 创建测试敌人
+	Prefab::createDarkCreature(world, glm::vec3(10.0f, 0.0f, 0.0f));
+	Prefab::createDarkCreature(world, glm::vec3(-10.0f, 0.0f, 0.0f));
 
 	m_frameTimer.start(); // 启动帧计时器
 
@@ -129,6 +145,9 @@ void Application::run()
 		// 处理事件
 		processEvents();
 
+		// 处理输入映射
+		m_pInputMap->update();
+
 		// 渲染场景
 		render();
 
@@ -137,6 +156,7 @@ void Application::run()
 
 		// 更新ECS世界
 		world.update(deltaTime);
+		world.processDestruction();
 
 		// 交换缓冲区
 		SDL_GL_SwapWindow(m_pWindow);

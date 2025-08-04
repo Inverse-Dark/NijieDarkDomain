@@ -1,6 +1,7 @@
 #pragma once
 #include "ecs/System.h"
 #include "core/AbilityTypes.h"
+#include "core/InputMap.h"
 #include "components/Player.h"
 #include "components/Transform.h"
 #include "components/Velocity.h"
@@ -8,7 +9,6 @@
 #include <SDL.h>
 
 // 前向声明
-class InputMap;
 class Entity;
 
 /// @brief 玩家控制系统 - 处理玩家输入并控制角色
@@ -37,14 +37,16 @@ public:
 	virtual void update(World& world, float deltaTime) override;
 private:
 	/// @brief 请求角色能力
-	/// @details 根据输入触发角色的能力
-	/// @param type [IN] 能力类型
-	void requestAbility(AbilityType type);
+	/// @details 根据输入触发角色的能力，并判断释放触发过，以避免每帧都请求一次
+	/// @param player [IN] 玩家实体
+	/// @param action [IN] 绑定的按键映射
+	/// @param abilityType [IN] 技能类型
+	void checkAbility(Entity* player, InputMap::Action action, AbilityType abilityType);
 	/// @brief 处理玩家移动
 	/// @details 根据输入更新玩家实体的位置
+	/// @param player [IN] 玩家实体
 	/// @param deltaTime [IN] 时间增量
-	void handleMovement(float deltaTime);
+	void handleMovement(Entity* player, float deltaTime);
 private:
 	InputMap* m_pInputMap;	// 输入映射，用于处理玩家输入
-	Entity* m_pPlayerEntity; // 玩家实体
 };

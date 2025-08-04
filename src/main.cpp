@@ -1,8 +1,13 @@
 #include "core/Application.h"
 
+#include <Windows.h>
+
 #undef main
 int main(int argc, char** argv)
 {
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
+
 	// 创建应用程序实例
 	Application app("逆界暗域", 1280, 720);
 
