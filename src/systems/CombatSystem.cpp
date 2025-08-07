@@ -27,23 +27,6 @@ void CombatSystem::update(World& world, float deltaTime) {
 		}
 
 		combatComp->clear();	// 清空攻击请求
-
-		// 如果攻击冷却结束，检查攻击范围内的目标
-		//if (attackComp->attackTimer.elapsed() >= attackComp->cooldown) {
-		//	for (auto& target : world.getEntities()) {
-		//		if (target.get() == attacker.get() || !target) continue; // 如果目标是自己或无效实体则跳过
-		//		auto* health = target->getComponent<Health>();
-		//		auto* attackerTransform = attacker->getComponent<Transform>();
-		//		auto* targetTransform = target->getComponent<Transform>();
-		//		if (!health || !attackerTransform || !targetTransform) continue;
-		//		// 检查距离
-		//		float distance = glm::distance(attackerTransform->position, targetTransform->position);
-		//		if (distance <= attackComp->range) {
-		//			applyDamage(attacker.get(), world, target.get(), attackComp->damage);
-		//			attackComp->attackTimer.restart();
-		//		}
-		//	}
-		//}
 	}
 
 	// 处理空间扭曲造成的伤害
@@ -64,8 +47,10 @@ void CombatSystem::applyDamage(Entity* attacker, Entity* target, float damage) {
 
 	health->current -= damage;
 
-	Logger::instance()->log("实体受到伤害: " + std::to_string(damage) +
-		" 剩余生命: " + std::to_string(health->current));
+	Logger::instance()->log("攻击者: " + std::to_string(attacker->getId()) +
+		" 攻击目标: " + std::to_string(target->getId()) +
+		" 造成伤害: " + std::to_string(damage) +
+		" 当前生命值: " + std::to_string(health->current));
 	if (health->current <= 0.0f) {
 		health->current = 0.0f;
 		Logger::instance()->log("实体被击败");

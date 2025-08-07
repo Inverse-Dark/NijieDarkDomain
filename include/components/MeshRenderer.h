@@ -25,6 +25,8 @@ struct MeshRenderer : public Component {
 		: mesh(nullptr), color(glm::vec3(1.0f, 1.0f, 1.0f)), visible(true)
 	{
 	}
+	/// @brief 析构函数
+	/// @details 确保释放 mesh 资源，避免内存泄漏
 	~MeshRenderer()
 	{
 		if (mesh)

@@ -12,6 +12,8 @@
 #include "components/CombatInput.h"
 #include "components/Cooldown.h"
 #include "components/Health.h"
+#include "components/Attack.h"
+#include "components/Camera.h"
 
 /// @brief 预设体：玩家实体
 /// @details 创建一个玩家实体，包含必要的组件和初始值设置。
@@ -43,6 +45,9 @@ namespace Prefab
 		transform.position = glm::vec3(0.0f, 0.0f, 0.0f);
 		transform.updateDirectionVectors();
 
+		// 添加摄像机组件
+		player.addComponent<Camera>();
+
 		// 添加速度组件
 		player.addComponent<Velocity>();
 
@@ -52,9 +57,13 @@ namespace Prefab
 
 		// 添加生命值组件
 		auto& health = player.addComponent<Health>();
-		health.current = 100.0f;
-		health.max = 100.0f;
+		health.current = 10000000000.0f;
+		health.max = 100000000000.0f;
 		health.baseMax = 100.0f;
+
+		// 添加攻击组件
+		auto& attack = player.addComponent<Attack>();
+		attack.damage = 10.0f;
 
 		// 添加技能请求组件
 		player.addComponent<AbilityInput>();
@@ -79,31 +88,37 @@ namespace Prefab
 
 		// 添加网格渲染组件
 		auto& meshRenderer = player.addComponent<MeshRenderer>();
-		meshRenderer.color = glm::vec3(0.0f, 1.0f, 1.0f); // 玩家颜色为青色
+		meshRenderer.color = glm::vec3(0.0f, 1.0f, 0.0f); // 玩家颜色为绿色
 		// 创建玩家网格（金字塔形状）
+		glm::vec3 frontColor = { 1.0f, 0.0f, 0.0f }; // 正面颜色 - 红色（明显区分）
+
+		// 定义顶点
 		std::vector<Mesh::Vertex> playerVertices = {
-			// 底部
-			{{-0.5f, 0.0f, -0.5f},	{0.0f, -1.0f, 0.0f},	{0.0f, 0.0f}, meshRenderer.color},
-			{{0.5f, 0.0f, -0.5f},	{0.0f, -1.0f, 0.0f},	{1.0f, 0.0f}, meshRenderer.color},
-			{{0.5f, 0.0f, 0.5f},	{0.0f, -1.0f, 0.0f},	{1.0f, 1.0f}, meshRenderer.color},
-			{{-0.5f, 0.0f, 0.5f},	{0.0f, -1.0f, 0.0f},	{0.0f, 1.0f}, meshRenderer.color},
+			// 底部 (保持基础颜色)
+			{{-0.5f, 0.0f, -0.5f}, {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f}, meshRenderer.color},
+			{{0.5f, 0.0f, -0.5f},  {0.0f, -1.0f, 0.0f}, {1.0f, 0.0f}, meshRenderer.color},
+			{{0.5f, 0.0f, 0.5f},   {0.0f, -1.0f, 0.0f}, {1.0f, 1.0f}, meshRenderer.color},
+			{{-0.5f, 0.0f, 0.5f},  {0.0f, -1.0f, 0.0f}, {0.0f, 1.0f}, meshRenderer.color},
 
-			// 侧面
-			{{0.0f, 1.0f, 0.0f},	{0.0f, 0.0f, 1.0f},	{0.5f, 1.0f}, meshRenderer.color},
-			{{-0.5f, 0.0f, 0.5f},	{0.0f, 0.0f, 1.0f},	{0.0f, 0.0f}, meshRenderer.color},
-			{{0.5f, 0.0f, 0.5f},	{0.0f, 0.0f, 1.0f},	{1.0f, 0.0f}, meshRenderer.color},
+			// 正面 (使用明显不同的颜色 - 红色)
+			{{0.0f, 1.0f, 0.0f},	{0.0f, 0.0f, 1.0f}, {0.5f, 1.0f}, frontColor},
+			{{0.5f, 0.0f, -0.5f},	{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, frontColor},
+			{{-0.5f, 0.0f, -0.5f},	{0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, frontColor},
 
-			{{0.0f, 1.0f, 0.0f},	{1.0f, 0.0f, 0.0f},	{0.5f, 1.0f}, meshRenderer.color},
-			{{0.5f, 0.0f, 0.5f},	{1.0f, 0.0f, 0.0f},	{0.0f, 0.0f}, meshRenderer.color},
-			{{0.5f, 0.0f, -0.5f},	{1.0f, 0.0f, 0.0f},	{1.0f, 0.0f}, meshRenderer.color},
+			// 右侧 (基础颜色)
+			{{0.0f, 1.0f, 0.0f},   {1.0f, 0.0f, 0.0f}, {0.5f, 1.0f}, meshRenderer.color},
+			{{0.5f, 0.0f, 0.5f},   {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}, meshRenderer.color},
+			{{0.5f, 0.0f, -0.5f},  {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, meshRenderer.color},
 
-			{{0.0f, 1.0f, 0.0f},	{0.0f, 0.0f, -1.0f},	{0.5f, 1.0f}, meshRenderer.color},
-			{{0.5f, 0.0f, -0.5f},	{0.0f, 0.0f, -1.0f},	{0.0f, 0.0f}, meshRenderer.color},
-			{{-0.5f, 0.0f, -0.5f},	{0.0f, 0.0f, -1.0f},	{1.0f, 0.0f}, meshRenderer.color},
+			// 背面 (基础颜色)
+			{{0.0f, 1.0f, 0.0f},  {0.0f, 0.0f, -1.0f}, {0.5f, 1.0f}, meshRenderer.color},
+			{{-0.5f, 0.0f, 0.5f}, {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f}, meshRenderer.color},
+			{{0.5f, 0.0f, 0.5f},  {0.0f, 0.0f, -1.0f}, {1.0f, 0.0f}, meshRenderer.color},
 
-			{{0.0f, 1.0f, 0.0f},	{-1.0f, 0.0f, 0.0f},	{0.5f, 1.0f}, meshRenderer.color},
-			{{-0.5f, 0.0f, -0.5f},	{-1.0f, 0.0f, 0.0f},	{0.0f, 0.0f}, meshRenderer.color},
-			{{-0.5f, 0.0f, 0.5f},	{-1.0f, 0.0f, 0.0f},	{1.0f, 0.0f}, meshRenderer.color}
+			// 左侧 (基础颜色)
+			{{0.0f, 1.0f, 0.0f},   {-1.0f, 0.0f, 0.0f}, {0.5f, 1.0f}, meshRenderer.color},
+			{{-0.5f, 0.0f, -0.5f}, {-1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}, meshRenderer.color},
+			{{-0.5f, 0.0f, 0.5f},  {-1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}, meshRenderer.color}
 		};
 
 		std::vector<unsigned int> playerIndices = {
@@ -111,10 +126,16 @@ namespace Prefab
 			0, 1, 2,
 			0, 2, 3,
 
-			// 侧面
+			// 正面 (红色面)
 			4, 5, 6,
+
+			// 右侧
 			7, 8, 9,
+
+			// 背面
 			10, 11, 12,
+
+			// 左侧
 			13, 14, 15
 		};
 		meshRenderer.mesh = new Mesh(playerVertices, playerIndices);

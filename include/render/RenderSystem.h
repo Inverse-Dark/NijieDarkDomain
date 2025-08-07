@@ -38,7 +38,19 @@ public:
 	void update(World& world, float deltaTime) override;
 	
 private:
+	/// @brief 绘制调试箭头
+	/// @details 使用指定的着色器在给定位置绘制一个箭头，表示方向
+	/// @param shader [IN] 用于渲染的着色器
+	/// @param position [IN] 箭头的起始位置
+	/// @param direction [IN] 箭头的方向向量
+	/// @param color [IN] 箭头的颜色
+	void drawDebugArrow(Shader* shader, const glm::vec3& position, const glm::vec3& direction, const glm::vec3& color);
 
+	/// @brief 绘制调试地面网格
+	/// @details 在XZ平面上绘制一个网格，作为地面参考
+	/// @param halfSize [IN] 网格的半尺寸（默认20）
+	/// @param step [IN] 网格线之间的间距（默认1.0f）
+	void drawDebugFloor(int halfSize = 20, float step = 1.0f) const;
 private:
 	Shader* m_pCoreShader;	// 渲染使用的着色器程序
 

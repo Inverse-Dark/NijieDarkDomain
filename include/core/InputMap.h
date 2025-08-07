@@ -26,6 +26,8 @@ public:
 		MoveBackward,	// 向后移动
 		MoveLeft,		// 向左转向
 		MoveRight,		// 向右转向
+
+		AttackPrimary,	// 主攻击
 		Ability1,		// 使用技能1
 		Ability2,		// 使用技能2
 		Ability3,		// 使用技能3
@@ -33,11 +35,20 @@ public:
 		Ability5		// 使用技能5
 	};
 
+	/// @brief 状态类型枚举
+	/// @details 定义了按键的状态类型
 	enum StateType
 	{
 		Pressed,	// 按键按下
 		Released,	// 按键释放
 		Held	// 按键按住
+	};
+
+	/// @brief 鼠标移动绑定结构体
+	/// @details 包含鼠标移动的坐标和相对坐标
+	struct MouseMove {
+		int x, y; // 鼠标移动的坐标
+		int xRel, yRel; // 鼠标相对移动的坐标
 	};
 public:
 	/// @brief 构造函数
@@ -50,6 +61,12 @@ public:
 	/// @param action [IN] 逻辑动作枚举
 	/// @param state [IN] 状态类型，默认为Pressed（按下）
 	void bindKey(SDL_Keycode key, Action action, StateType state = Pressed);
+	/// @brief 绑定按键到逻辑动作
+	/// @details 将指定的按键绑定到逻辑动作上
+	/// @param button [IN] 鼠标按键代码
+	/// @param action [IN] 逻辑动作枚举
+	/// @param state [IN] 状态类型，默认为Pressed（按下）
+	void bindMouse(int button, Action action, StateType state = Pressed);
 
 	/// @brief 处理输入事件
 	/// @details 根据SDL事件更新逻辑动作状态
@@ -72,6 +89,14 @@ public:
 	/// @param callback [IN] 状态变化回调函数
 	/// @param state [IN] 状态类型，默认为Pressed（按下）
 	void addActionListener(Action action, std::function<void()> callback, StateType state = Pressed);
+
+	/// @brief 获取鼠标移动
+	/// @details 获取鼠标移动的坐标和相对坐标
+	/// @return 鼠标移动绑定结构体，包含坐标和相对坐标
+	MouseMove getMouseMove() const;
+	/// @brief 重置鼠标相对坐标
+	/// @details 重置鼠标相对坐标为0
+	void resetMouseRelative();
 private:
 	/// @brief 按键绑定结构体
 	/// @details 包含逻辑动作和状态类型
@@ -85,11 +110,20 @@ private:
 		Action action;
 		StateType state;
 	};
-
+	/// @brief 按键绑定结构体
+	/// @details 包含逻辑动作和状态类型
+	struct MouseBinding {
+		Action action;
+		StateType state;
+	};
 private:
 	std::unordered_map<SDL_Keycode, std::vector<KeyBinding>> m_keyBindings;	// 键盘按键到逻辑动作的映射
+	std::unordered_map<int, std::vector<MouseBinding>> m_mouseBindings;	// 鼠标按键到逻辑动作的映射
 	std::unordered_map<SDL_Keycode, bool> m_keyStates;	// 逻辑动作的当前状态（按下或未按下）
+	std::unordered_map<int, bool> m_mouseStates;	// 逻辑动作的当前状态（按下或未按下）
 	std::unordered_map<Action, std::vector<std::function<void()>>> m_pressedListeners;	// 逻辑动作按下的监听器
 	std::unordered_map<Action, std::vector<std::function<void()>>> m_releasedListeners;	// 逻辑动作释放的监听器
 	std::vector<ActiveEvent> m_activeEvents;	// 当前活动的按键事件列表，用于处理按键状态变化
+
+	MouseMove m_mouseMove;	// 鼠标移动绑定，用于处理鼠标移动事件
 };

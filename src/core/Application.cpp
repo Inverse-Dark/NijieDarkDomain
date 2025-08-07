@@ -9,6 +9,7 @@
 #include "systems/EnvironmentSystem.h"
 #include "systems/AISystem.h"
 #include "systems/CombatSystem.h"
+#include "systems/CameraSystem.h"
 #include "render/RenderSystem.h"
 #include "prefabs/PlayerPrefab.h"
 #include "prefabs/EnemyPrefab.h"
@@ -47,6 +48,8 @@ bool Application::initialize()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);	// 设置OpenGL核心配置文件
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);	// 启用双缓冲
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);	// 设置深度缓冲大小为24位
+	SDL_SetRelativeMouseMode(SDL_TRUE);	// 锁定鼠标到窗口中心
+	SDL_ShowCursor(SDL_DISABLE);	// 隐藏鼠标光标
 
 	m_pWindow = SDL_CreateWindow(m_windowTitle.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		m_screenWidth, m_screenHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
@@ -124,6 +127,7 @@ void Application::run()
 	envSystem->spawnCorruptionSource(world, glm::vec3(-10.0f, 0.0f, -10.0f), 12.0f, 6.0f);
 
 	world.addSystem(std::make_unique<MovementSystem>()); // 添加移动系统到ECS世界
+	world.addSystem(std::make_unique<CameraSystem>(m_pInputMap.get())); // 添加相机系统到ECS世界
 	world.addSystem(std::make_unique<PlayerControlSystem>(m_pInputMap.get())); // 添加玩家控制系统到ECS世界
 	world.addSystem(std::make_unique<AbilitySystem>()); // 添加能力系统到ECS世界
 	world.addSystem(std::make_unique<CorruptionSystem>()); // 添加腐化系统到ECS世界
@@ -134,7 +138,15 @@ void Application::run()
 
 	// 创建测试敌人
 	Prefab::createDarkCreature(world, glm::vec3(10.0f, 0.0f, 0.0f));
-	Prefab::createDarkCreature(world, glm::vec3(-10.0f, 0.0f, 0.0f));
+	auto& entity1 = Prefab::createDarkCreature(world, glm::vec3(-10.0f, 0.0f, 0.0f));
+	if(auto* meshRenderer = entity1.getComponent<MeshRenderer>())
+		meshRenderer->mesh->updateColor(glm::vec3(0.5f, 0.2f, 0.8f)); // 设置敌人颜色为暗紫色
+	auto& entity2 = Prefab::createDarkCreature(world, glm::vec3(0.0f, 0.0f, 10.0f));
+	if(auto* meshRenderer = entity2.getComponent<MeshRenderer>())
+		meshRenderer->mesh->updateColor(glm::vec3(0.2f, 0.5f, 0.8f)); // 设置敌人颜色为暗蓝色
+	auto& entity3 = Prefab::createDarkCreature(world, glm::vec3(0.0f, 0.0f, -10.0f));
+	if(auto* meshRenderer = entity3.getComponent<MeshRenderer>())
+		meshRenderer->mesh->updateColor(glm::vec3(0.8f, 0.2f, 0.5f)); // 设置敌人颜色为暗粉色
 
 	m_frameTimer.start(); // 启动帧计时器
 
@@ -185,11 +197,8 @@ void Application::processEvents()
 					std::to_string(m_screenHeight));
 			}
 			break;
-		case SDL_KEYUP:
-		case SDL_KEYDOWN:
-			m_pInputMap.get()->processEvent(event); // 处理输入事件
-			break;
 		}
+		m_pInputMap.get()->processEvent(event); // 处理输入事件
 	}
 }
 

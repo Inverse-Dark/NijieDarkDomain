@@ -17,11 +17,14 @@
 struct Attack : public Component {
 	float damage;   // 攻击伤害
 	float range; // 攻击范围
+	float angle; // 攻击角度
     float cooldown; // 攻击冷却时间
     Timer attackTimer; // 攻击计时器
 
+	/// @brief 默认构造函数
+	/// @details 初始化攻击伤害为10.0，攻击范围为2.0，攻击角度为60.0，冷却时间为1.0
     Attack() 
-		: damage(10.0f), range(2.0f), cooldown(1.0f)
+		: damage(10.0f), range(2.0f), angle(60.0f), cooldown(1.0f)
     {
 	}
 };

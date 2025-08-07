@@ -25,6 +25,23 @@ void Mesh::draw() const
 	glBindVertexArray(0);	// 解绑VAO
 }
 
+std::vector<Mesh::Vertex> Mesh::getVertices() const
+{
+	return m_vertices;
+}
+
+void Mesh::updateColor(glm::vec3 color)
+{
+	for (auto& vertex : m_vertices) {
+		vertex.color = color;  // 更新所有顶点的颜色
+	}
+	// 重新上传顶点数据
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(Vertex), &m_vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	Logger::instance()->log("网格颜色已更新");
+}
+
 void Mesh::setupMesh()
 {
 	// 创建缓冲区

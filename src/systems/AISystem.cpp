@@ -181,10 +181,9 @@ void AISystem::chaseBehavior(Entity* entity, Entity* player, float deltaTime)
 		velocity->linear = direction * movementProperties->getEffectiveSpeed();
 
 		// 更新朝向
-		transform->rotation = glm::quatLookAt(
-			direction,
-			glm::vec3(0.0f, 1.0f, 0.0f)
-		);
+		glm::quat targetRot = glm::quatLookAt(direction, glm::vec3(0, 1, 0));
+		const float rotSpeed = movementProperties->getEffectiveSpeed() * deltaTime;
+		transform->rotation = glm::slerp(transform->rotation, targetRot, glm::clamp(rotSpeed, 0.0f, 1.0f));
 	}
 
 	// 如果接近玩家，切换到攻击状态
@@ -224,8 +223,9 @@ void AISystem::attackBehavior(Entity* entity, Entity* player, float deltaTime)
 	auto* combat = entity->getComponent<CombatInput>();
 	auto* playerTransform = player->getComponent<Transform>();
 	auto* playerHealth = player->getComponent<Health>();
+	auto* movementProperties = entity->getComponent<MovementProperties>();
 
-	if (!ai || !transform || !velocity || !attack || !combat || !playerTransform || !playerHealth) return;
+	if (!ai || !transform || !velocity || !attack || !combat || !playerTransform || !playerHealth || !movementProperties) return;
 
 	// 停止移动
 	velocity->linear = glm::vec3(0.0f);
@@ -239,8 +239,28 @@ void AISystem::attackBehavior(Entity* entity, Entity* player, float deltaTime)
 
 	// 攻击冷却结束，执行攻击
 	if (attack->attackTimer.elapsed() >= attack->cooldown) {
-		combat->requestCombat(player);
-		attack->attackTimer.restart();
+		// 计算距离和方向
+		glm::vec3 toTarget = playerTransform->position - transform->position;
+		float distance = glm::length(toTarget);
+		if (distance <= attack->range)
+		{
+			// 计算角度
+			glm::vec3 dir = glm::normalize(toTarget);
+			float angle = glm::degrees(glm::acos(glm::dot(transform->forward, dir)));
+
+			if (angle <= attack->angle)
+			{
+				// 应用伤害
+				combat->requestCombat(player);
+				attack->attackTimer.restart();
+			}
+			else
+			{
+				glm::quat targetRot = glm::quatLookAt(dir, glm::vec3(0, 1, 0));
+				const float rotSpeed = movementProperties->getEffectiveSpeed() * deltaTime;
+				transform->rotation = glm::slerp(transform->rotation, targetRot, glm::clamp(rotSpeed, 0.0f, 1.0f));
+			}
+		}
 	}
 
 }

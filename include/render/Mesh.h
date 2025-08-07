@@ -40,6 +40,14 @@ public:
 	/// @details 绑定VAO并绘制元素
 	void draw() const;
 
+	/// @brief 获取顶点数据
+	/// @details 返回存储的顶点数组
+	std::vector<Vertex> getVertices() const;
+
+	/// @brief 更新顶点颜色
+	/// @details 更新所有顶点的颜色属性
+	void updateColor(glm::vec3 color);
+
 private:
 	/// @brief 设置网格的OpenGL缓冲区对象
 	/// @details 创建并绑定VAO、VBO和EBO，上传顶点和索引数据

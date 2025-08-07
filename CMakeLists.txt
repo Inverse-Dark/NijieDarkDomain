@@ -34,6 +34,7 @@ add_executable(${PROJECT_NAME}
     "src/systems/EnvironmentSystem.cpp" 
     "src/systems/AISystem.cpp" 
     "src/systems/CombatSystem.cpp"
+    "src/systems/CameraSystem.cpp"
 )
 
 # 包含目录
